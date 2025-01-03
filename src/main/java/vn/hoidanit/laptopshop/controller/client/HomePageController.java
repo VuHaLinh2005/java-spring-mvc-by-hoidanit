@@ -26,8 +26,7 @@ public class HomePageController {
 
     public HomePageController(
             ProductService productService,
-            UserService userService,
-            PasswordEncoder passwordEncoder) {
+            UserService userService,PasswordEncoder passwordEncoder) {
         this.productService = productService;
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
