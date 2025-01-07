@@ -30,7 +30,7 @@ private String email;
 
     @NotNull
     @Size(message = "password phải tối thiểu 2 kí tự",min = 2)
-    @StrongPassword(message = "pass wword sia bal al a ")
+    // @StrongPassword(message = "pass wword sia bal al a ")
     private String password;
 
     @NotNull
