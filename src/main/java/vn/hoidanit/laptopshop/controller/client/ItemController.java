@@ -1,6 +1,7 @@
 package vn.hoidanit.laptopshop.controller.client;
 
 import java.net.http.HttpRequest;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -56,7 +57,7 @@ public class ItemController {
 
         Cart cart = this.productService.fetchByUser(currentUser);
 
-        List<CartDetail> cartDetails = cart.getCartDetails();//join vs owning side
+       List<CartDetail> cartDetails = cart == null ? new ArrayList<CartDetail>() : cart.getCartDetails();//assign with toán tử ngôi 3
 
         double totalPrice = 0;
         for (CartDetail cd : cartDetails) {
