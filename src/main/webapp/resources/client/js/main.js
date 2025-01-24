@@ -153,6 +153,8 @@
         
         var button = $(this);
         var oldValue = button.parent().parent().find('input').val();
+
+        
         
         if (button.hasClass('btn-plus')) {
             var newVal = parseFloat(oldValue) + 1;
@@ -168,8 +170,15 @@
         const input = button.parent().parent().find('input');
         input.val(newVal);
 
+             //set form index
+        const index = input.attr("data-cart-detail-index")
+        const el = document.getElementById(`cartDetails${index}.quantity`);
+        $(el).val(newVal);//just know why has index .
+
+
+
         //get price
-        const price = input.attr("data-cart-detail-price");
+        const price = input.attr("data-cart-detail-price"); 
         const id = input.attr("data-cart-detail-id");
 
         const priceElement = $(`p[data-cart-detail-id='${id}']`);
@@ -179,7 +188,7 @@
         }
 
         //update total cart price
-        const totalPriceElement = $(`p[data-cart-total-price]`);
+        const totalPriceElement = $(`p[data-cart-total-price]`);/* query selector return 1 element then use # */
 
         if (totalPriceElement && totalPriceElement.length) {
             const currentTotal = totalPriceElement.first().attr("data-cart-total-price");
@@ -194,7 +203,7 @@
             change = 0;
 
             //update
-            totalPriceElement?.each(function (index, element) {
+            totalPriceElement?.each(function (index, element) {/* ? operator  is : Optional chaining */
                 //update text
                 $(totalPriceElement[index]).text(formatCurrency(newTotal.toFixed(2)) + " đ");
 

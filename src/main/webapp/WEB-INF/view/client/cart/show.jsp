@@ -1,6 +1,7 @@
 <%@page contentType="text/html" pageEncoding="UTF-8" %>
     <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
         <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+         <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
             <!DOCTYPE html>
             <html lang="en">
 
@@ -70,7 +71,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <c:forEach var="cartDetail" items="${cartDetails}">
+                                    <c:forEach var="cartDetail" items="${cartDetails}"  varStatus="status">
                                         <tr>
                                             <th scope="row">
                                                 <div class="d-flex align-items-center">
@@ -103,7 +104,10 @@
                                                         class="form-control form-control-sm text-center border-0"
                                                         value="${cartDetail.quantity}"
                                                         data-cart-detail-id="${cartDetail.id}"
-                                                        data-cart-detail-price="${cartDetail.price}">
+                                                        data-cart-detail-price="${cartDetail.price}"
+                                                        data-cart-detail-index="${status.index}"> 
+                                                       <!-- assign attr price is here =))) -->
+                                                        <!-- data attribute for element html -->
                                                     <div class="input-group-btn"><!-- add thuộc tính html : data-cart.... -->
                                                         <button
                                                             class="btn btn-sm btn-plus rounded-circle bg-light border">
@@ -118,11 +122,15 @@
                                                         value="${cartDetail.price * cartDetail.quantity}" /> đ
                                                 </p>
                                             </td>
-                                            <td>
-                                                <button class="btn btn-md rounded-circle bg-light border mt-4">
-                                                    <i class="fa fa-times text-danger"></i>
-                                                </button>
-                                            </td>
+                                             <td>
+                                                    <form method="post" action="/delete-cart-product/${cartDetail.id}">
+                                                        <input type="hidden" name="${_csrf.parameterName}"
+                                                            value="${_csrf.token}" />
+                                                        <button class="btn btn-md rounded-circle bg-light border mt-4">
+                                                            <i class="fa fa-times text-danger"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
 
                                         </tr>
                                     </c:forEach>
@@ -155,9 +163,34 @@
                                             <fmt:formatNumber type="number" value="${totalPrice}" /> đ
                                         </p>
                                     </div>
-                                    <button
-                                        class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4"
-                                        type="button">Xác nhận đặt hàng</button>
+                                    <form:form action="/confirm-checkout" method="post" modelAttribute="cart">
+                                                <input type="hidden" name="${_csrf.parameterName}"
+                                                    value="${_csrf.token}" />
+                                                <div style="display: none;"><!-- card detail use bình thường ? video lỗi ? -->
+                                                    <c:forEach var="cartDetail" items="${cartDetails}"
+                                                        varStatus="status">
+                                                        <div class="mb-3">
+                                                            <div class="form-group">
+                                                                <label>Id :</label>
+                                                                <form:input class="form-control" type="text"
+                                                                    value="${cartDetail.id}"
+                                                                    path="cartDetails[${status.index}].id" />
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label>Quantity:</label>
+                                                                <form:input class="form-control" type="text"
+                                                                    value="${cartDetail.quantity}"
+                                                                    path="cartDetails[${status.index}].quantity" /><!-- tag form ;path = id -->
+                                                            </div>
+                                                        </div>
+                                                    </c:forEach>
+                                                </div>
+                                                <button
+                                                    class="btn border-secondary rounded-pill px-4 py-3 text-primary text-uppercase mb-4 ms-4">Xác
+                                                    nhận thanh toán
+                                                </button>
+                                            </form:form>
+                                     
                                 </div>
                             </div>
                         </div>
