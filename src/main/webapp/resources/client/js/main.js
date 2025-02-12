@@ -127,6 +127,20 @@
         $('#videoModal').on('hide.bs.modal', function (e) {
             $("#video").attr('src', $videoSrc);
         })
+        
+        //add active class to header
+        const navElement = $("#navbarCollapse");
+        const currentUrl = window.location.pathname;
+        navElement.find('a.nav-link').each(function () {
+            const link = $(this); // Get the current link in the loop
+            const href = link.attr('href'); // Get the href attribute of the link
+
+            if (href === currentUrl) {
+                link.addClass('active'); // Add 'active' class if the href matches the current URL
+            } else {
+                link.removeClass('active'); // Remove 'active' class if the href does not match
+            }
+        });
     });
 
 
@@ -226,6 +240,98 @@
         formatted = formatted.replace(/\./g, ',');
         return formatted;
     }
+
+    // handle filter product
+$('#btnFilter').click(function (event) {
+    event.preventDefault(); // Ngăn chặn hành vi mặc định (ví dụ: submit form) khi nhấn nút
+
+    // Khởi tạo các mảng lưu trữ giá trị của các checkbox được chọn
+    let factoryArr = []; // Lưu giá trị của bộ lọc "factory" (nhà sản xuất)
+    let targetArr = [];  // Lưu giá trị của bộ lọc "target" (đối tượng hướng đến)
+    let priceArr = [];   // Lưu giá trị của bộ lọc "price" (khoảng giá)
+
+    // Lấy giá trị của tất cả các checkbox đã được chọn trong phần lọc "factory"
+    $("#factoryFilter .form-check-input:checked").each(function () {
+        factoryArr.push($(this).val()); // Thêm giá trị của checkbox vào mảng factoryArr
+    });
+
+    // Lấy giá trị của tất cả các checkbox đã được chọn trong phần lọc "target"
+    $("#targetFilter .form-check-input:checked").each(function () {
+        targetArr.push($(this).val()); // Thêm giá trị vào mảng targetArr
+    });
+
+    // Lấy giá trị của tất cả các checkbox đã được chọn trong phần lọc "price"
+    $("#priceFilter .form-check-input:checked").each(function () {
+        priceArr.push($(this).val()); // Thêm giá trị vào mảng priceArr
+    });
+
+    // Lấy giá trị của radio button được chọn để sắp xếp sản phẩm
+    let sortValue = $('input[name="radio-sort"]:checked').val();
+
+    // Tạo đối tượng URL từ URL hiện tại của trình duyệt để thao tác với query parameters
+    const currentUrl = new URL(window.location.href);
+    const searchParams = currentUrl.searchParams; // Đối tượng giúp xử lý các tham số trên URL
+
+    // Cập nhật các tham số trên URL:
+    searchParams.set('page', '1');        // Đặt tham số 'page' về '1' để chuyển về trang đầu tiên khi lọc
+    searchParams.set('sort', sortValue);    // Đặt tham số 'sort' với giá trị của radio button đã chọn
+
+    // Nếu có bộ lọc "factory" được chọn, ghép các giá trị lại thành chuỗi phân cách bằng dấu phẩy
+    if (factoryArr.length > 0) {
+        searchParams.set('factory', factoryArr.join(','));
+    }
+    // Nếu có bộ lọc "target" được chọn, ghép các giá trị lại thành chuỗi phân cách bằng dấu phẩy
+    if (targetArr.length > 0) {
+        searchParams.set('target', targetArr.join(','));
+    }
+    // Nếu có bộ lọc "price" được chọn, ghép các giá trị lại thành chuỗi phân cách bằng dấu phẩy
+    if (priceArr.length > 0) {
+        searchParams.set('price', priceArr.join(','));
+    }
+
+    // Cập nhật URL của trình duyệt với các tham số mới và tải lại trang để áp dụng bộ lọc
+    window.location.href = currentUrl.toString();
+});
+
+
+// Xử lý tự động chọn checkbox và radio khi trang được tải dựa trên URL (để khi reload trang thì các bộ lọc vẫn được giữ lại)
+// Tạo đối tượng URLSearchParams từ query string(vd : ?name=John&age=30) trong URL hiện tại
+const params = new URLSearchParams(window.location.search);
+
+// Nếu URL có tham số 'factory', tự động check các checkbox tương ứng
+if (params.has('factory')) {
+    const factories = params.get('factory').split(','); // Lấy giá trị của 'factory' và tách thành mảng (giá trị cách nhau bởi dấu phẩy)
+    factories.forEach(factory => {
+        // Chọn checkbox có giá trị tương ứng trong phần #factoryFilter
+        $(`#factoryFilter .form-check-input[value="${factory}"]`).prop('checked', true);//prop get set properties , 
+        // thiết lập thuộc tính checked của checkbox đó thành true.
+    });
+}
+
+// Nếu URL có tham số 'target', tự động check các checkbox tương ứng
+if (params.has('target')) {
+    const targets = params.get('target').split(',');
+    targets.forEach(target => {
+        // Chọn checkbox có giá trị tương ứng trong phần #targetFilter
+        $(`#targetFilter .form-check-input[value="${target}"]`).prop('checked', true);
+    });
+}
+
+// Nếu URL có tham số 'price', tự động check các checkbox tương ứng
+if (params.has('price')) {
+    const prices = params.get('price').split(',');
+    prices.forEach(price => {
+        // Chọn checkbox có giá trị tương ứng trong phần #priceFilter
+        $(`#priceFilter .form-check-input[value="${price}"]`).prop('checked', true);
+    });
+}
+
+// Nếu URL có tham số 'sort', tự động check radio button tương ứng
+if (params.has('sort')) {
+    const sort = params.get('sort');
+    // Chọn radio button có name là "radio-sort" và giá trị tương ứng
+    $(`input[type="radio"][name="radio-sort"][value="${sort}"]`).prop('checked', true);
+}
 
 })(jQuery);
 
