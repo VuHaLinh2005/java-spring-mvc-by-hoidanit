@@ -242,8 +242,8 @@
     }
 
     // handle filter product
-$('#btnFilter').click(function (event) {
-    event.preventDefault(); // Ngăn chặn hành vi mặc định (ví dụ: submit form) khi nhấn nút
+$('#btnFilter').click(function () {
+    // event.preventDefault(); // Ngăn chặn hành vi mặc định (ví dụ: submit form) khi nhấn nút
 
     // Khởi tạo các mảng lưu trữ giá trị của các checkbox được chọn
     let factoryArr = []; // Lưu giá trị của bộ lọc "factory" (nhà sản xuất)
@@ -276,6 +276,11 @@ $('#btnFilter').click(function (event) {
     searchParams.set('page', '1');        // Đặt tham số 'page' về '1' để chuyển về trang đầu tiên khi lọc
     searchParams.set('sort', sortValue);    // Đặt tham số 'sort' với giá trị của radio button đã chọn
 
+    //reset parameter cũ (case : k chọn vẫn bị check)
+    searchParams.delete('factory');
+    searchParams.delete('target');
+    searchParams.delete('price');
+
     // Nếu có bộ lọc "factory" được chọn, ghép các giá trị lại thành chuỗi phân cách bằng dấu phẩy
     if (factoryArr.length > 0) {
         searchParams.set('factory', factoryArr.join(','));
@@ -290,7 +295,7 @@ $('#btnFilter').click(function (event) {
     }
 
     // Cập nhật URL của trình duyệt với các tham số mới và tải lại trang để áp dụng bộ lọc
-    window.location.href = currentUrl.toString();
+    window.location.href = currentUrl.toString();//refresh to update url has query string
 });
 
 
@@ -333,5 +338,106 @@ if (params.has('sort')) {
     $(`input[type="radio"][name="radio-sort"][value="${sort}"]`).prop('checked', true);
 }
 
+
+
+   //////////////////////////
+// handle add to cart with ajax
+$('.btnAddToCartHomepage').click(function (event) {  // Gắn sự kiện click cho các nút có class "btnAddToCartHomepage"
+    event.preventDefault();                          // Ngăn hành vi mặc định của nút (như submit form)
+
+    if (!isLogin()) {                                 
+        $.toast({                                     
+            heading: 'Lỗi thao tác',                  
+            text: 'Bạn cần đăng nhập tài khoản',     
+            position: 'top-right',                    
+            icon: 'error'                           
+        })
+        return;                                       
+    }
+
+    const productId = $(this).attr('data-product-id');  // Lấy giá trị thuộc tính "data-product-id" của nút được nhấn
+    const token = $("meta[name='_csrf']").attr("content");  // Lấy token CSRF từ thẻ meta để bảo mật yêu cầu
+    const header = $("meta[name='_csrf_header']").attr("content");  // Lấy tên header CSRF từ thẻ meta
+
+    $.ajax({                                        // Thực hiện yêu cầu AJAX để gửi dữ liệu lên server
+        url: `${window.location.origin}/api/add-product-to-cart`,  // URL origin +  API để thêm sản phẩm vào giỏ hàng
+        beforeSend: function (xhr) {                 // Hàm chạy trước khi gửi yêu cầu
+            xhr.setRequestHeader(header, token);     // Thêm Header CSRF(ten header) và token(value) vào yêu cầu để xác thực vd : X-CSRF-TOKEN: abc123
+        },
+        type: "POST",                                 
+        data: JSON.stringify({ quantity: 1, productId: productId }),  //object literal Stringify (chuyen js -> json) Dữ liệu gửi đi: số lượng mặc định là 1 và ID sản phẩm
+        contentType: "application/json",             // Định dạng dữ liệu gửi đi là JSON
+
+        success: function (response) {               //response là dữ liệu server trả về ,Hàm xử lý khi yêu cầu thành công
+            const sum = +response;                   
+            // update cart
+            $("#sumCart").text(sum)                  // Cập nhật số lượng sản phẩm hiển thị trên giao diện (ID "sumCart")
+            // show message
+            $.toast({                                // Hiển thị thông báo thành công bằng jQuery Toast
+                heading: 'Giỏ hàng',                 // Tiêu đề thông báo
+                text: 'Thêm sản phẩm vào giỏ hàng thành công',  // Nội dung thông báo
+                position: 'top-right',               // Vị trí hiển thị thông báo
+            })
+        },
+        error: function (response) {                 // Hàm xử lý khi yêu cầu thất bại
+            alert("có lỗi xảy ra, check code đi ba :v")  // Hiển thị thông báo lỗi đơn giản
+            console.log("error: ", response);        // Ghi log lỗi vào console để debug
+        }
+    });
+});
+
+$('.btnAddToCartDetail').click(function (event) {  // Gắn sự kiện click cho các nút có class "btnAddToCartDetail"
+    event.preventDefault();                        // Ngăn hành vi mặc định của nút
+    if (!isLogin()) {                             
+        $.toast({                                 
+            heading: 'Lỗi thao tác',               
+            text: 'Bạn cần đăng nhập tài khoản',    
+            position: 'top-right',                  
+            icon: 'error'                          // Biểu tượng lỗi
+        })
+        return;                                   
+    }
+
+    const productId = $(this).attr('data-product-id');  // Lấy ID sản phẩm từ thuộc tính "data-product-id"
+    const token = $("meta[name='_csrf']").attr("content");  // Lấy token CSRF từ thẻ meta
+    const header = $("meta[name='_csrf_header']").attr("content");  // Lấy tên header CSRF từ thẻ meta
+    const quantity = $("#cartDetails0\\.quantity").val();  // Lấy số lượng sản phẩm từ input có ID "cartDetails0.quantity" dấu // để tránh jquery nhầm vs
+    //                                                                                                                       dấu chấm của class
+
+    $.ajax({                                        // Thực hiện yêu cầu AJAX để thêm sản phẩm vào giỏ hàng
+        url: `${window.location.origin}/api/add-product-to-cart`,  // URL API để thêm sản phẩm
+        beforeSend: function (xhr) {                 // Hàm chạy trước khi gửi yêu cầu
+            xhr.setRequestHeader(header, token);     // Thêm header CSRF và token vào yêu cầu
+        },
+        type: "POST",                                // Phương thức HTTP là POST
+        data: JSON.stringify({ quantity: quantity, productId: productId }),  // Dữ liệu gửi đi: số lượng từ input và ID sản phẩm
+        contentType: "application/json",             // Định dạng dữ liệu là JSON
+
+        success: function (response) {               
+            const sum = +response;                   
+            // update cart
+            $("#sumCart").text(sum)                  // Cập nhật số lượng sản phẩm hiển thị trên giao diện (ID "sumCart")
+            // show message
+            $.toast({                                
+                heading: 'Giỏ hàng',                  
+                text: 'Thêm sản phẩm vào giỏ hàng thành công',  
+                position: 'top-right',                
+            })
+        },
+        error: function (response) {                 // Hàm xử lý khi yêu cầu thất bại
+            alert("có lỗi xảy ra, check code đi ba :v")   
+            console.log("error: ", response);         
+        }
+    });
+});
+
+function isLogin() {                                // Hàm kiểm tra trạng thái đăng nhập của người dùng
+    const navElement = $("#navbarCollapse");        // Lấy phần tử có ID "navbarCollapse" (thường là thanh điều hướng)
+    const childLogin = navElement.find('a.a-login');  // Tìm thẻ <a> có class "a-login" 
+    if (childLogin.length > 0) {                    // Nếu tồn tại thẻ "a-login" (nghĩa là có nút đăng nhập)
+        return false;                               
+    }
+    return true;                                    // Nếu không có nút đăng nhập, trả về true (đã đăng nhập)
+}
 })(jQuery);
 
